@@ -1,6 +1,6 @@
 from ViNLP.BertPosTagger import BERTPoSTagger
 from transformers import BertTokenizer
-from transformers import  tokenization_bert
+# from transformers import  tokenization_bert
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 import nltk
 import torch
@@ -15,7 +15,7 @@ import urllib.request
 logger = logging.getLogger(__name__)
 def _is_punctuation(char):
     return False
-tokenization_bert._is_punctuation = _is_punctuation
+# tokenization_bert._is_punctuation = _is_punctuation
 
 if torch.cuda.is_available():       
     device = torch.device("cuda")
@@ -147,8 +147,16 @@ class BertVnNer:
         train_dataloader = self.covert_text(texts,batch_size)
         test_pred = self.predict(train_dataloader)
         return test_pred
-
+        
     def annotate(self,texts,batch_size=8):
+        try:
+            return self._annotate(texts,batch_size)
+        except:
+            import nltk
+            nltk.download('punkt')
+            return self._annotate(texts,batch_size)
+
+    def _annotate(self,texts,batch_size=8):
         test_pred = self.split(texts,batch_size=batch_size)
         entities = []
         for sent in test_pred:

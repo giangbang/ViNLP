@@ -1,6 +1,6 @@
 from ViNLP.BertPosTagger import BERTPoSTagger
 from transformers import BertTokenizer
-from transformers import  tokenization_bert
+# from transformers import  tokenization_bert
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 import nltk
 import torch
@@ -8,7 +8,7 @@ import re
 import unicodedata
 def _is_punctuation(char):
     return False
-tokenization_bert._is_punctuation = _is_punctuation
+# tokenization_bert._is_punctuation = _is_punctuation
 
 class BertVnPosTagger:
     def __init__(self,model_path,max_length=256):
