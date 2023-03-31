@@ -17,7 +17,9 @@ def _is_punctuation(char):
     return False
 # tokenization_bert._is_punctuation = _is_punctuation
 
-if torch.cuda.is_available():       
+url_download_model = "https://storage.googleapis.com/kaggle-data-sets/3071079/5276987/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20230331%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230331T160137Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=1abd1850f86b2696f20ed8414061744f428c15188f3f9104691ab92d777fa655ae951bd79887e19eacc2664219be228210d8b51575d07cb630042fa6509163c075aff1c9578f2d4b7e2fd88f1ef457cf16dda514377a2e27316bbc26cc5c8b8176c9b158e786fe813efe531bdc53ac54858e0f3cd2815802e8bb135f8da49afd744c8d24ae04eaaf030afcf5039b486b4aa646f27137049add17fcfc038b88e8ff5c550fd861db4821be5bed661e94a4475eeafe3229015ab24b757e2ebb433dc47aef860a6cc52b27c75a2a05e9763f8fd492cf8e1ce72bb794f4a900da6c6b598d3aafeb33eca118b29b5702aba2d5b8b7334b31f2c8bf325678bd8ed6eabd"
+
+if torch.cuda.is_available():
     device = torch.device("cuda")
 
     logger.info('There are %d GPU(s) available.' % torch.cuda.device_count())
@@ -30,16 +32,16 @@ else:
 class BertVnNer:
     def __init__(self,model_path=None,max_length=256,tag2int=None):
         if(tag2int is None):
-            self.tag2int = {'B-LOCATION+B-ORGANIZATION': 1, 'B-LOCATION+I-LOCATION': 2, 'B-LOCATION+I-MISCELLANEOUS': 3, 'B-LOCATION+I-ORGANIZATION': 4, 
-                            'B-LOCATION+O': 5, 'B-MISCELLANEOUS+I-ORGANIZATION': 6, 'B-MISCELLANEOUS+O': 7, 'B-ORGANIZATION+B-LOCATION': 8, 'B-ORGANIZATION+I-ORGANIZATION': 9, 
-                            'B-ORGANIZATION+O': 10, 'B-PERSON+B-ORGANIZATION': 11, 'B-PERSON+I-LOCATION': 12, 'B-PERSON+I-ORGANIZATION': 13, 'B-PERSON+O': 14, 'I-LOCATION+I-LOCATION': 15, 
+            self.tag2int = {'B-LOCATION+B-ORGANIZATION': 1, 'B-LOCATION+I-LOCATION': 2, 'B-LOCATION+I-MISCELLANEOUS': 3, 'B-LOCATION+I-ORGANIZATION': 4,
+                            'B-LOCATION+O': 5, 'B-MISCELLANEOUS+I-ORGANIZATION': 6, 'B-MISCELLANEOUS+O': 7, 'B-ORGANIZATION+B-LOCATION': 8, 'B-ORGANIZATION+I-ORGANIZATION': 9,
+                            'B-ORGANIZATION+O': 10, 'B-PERSON+B-ORGANIZATION': 11, 'B-PERSON+I-LOCATION': 12, 'B-PERSON+I-ORGANIZATION': 13, 'B-PERSON+O': 14, 'I-LOCATION+I-LOCATION': 15,
                             'I-LOCATION+I-MISCELLANEOUS': 16, 'I-LOCATION+I-ORGANIZATION': 17, 'I-LOCATION+O': 18, 'I-MISCELLANEOUS+I-ORGANIZATION': 19, 'I-MISCELLANEOUS+O': 20,
-                            'I-ORGANIZATION+I-ORGANIZATION': 21, 'I-ORGANIZATION+O': 22, 'I-PERSON+I-LOCATION': 23, 'I-PERSON+I-ORGANIZATION': 24, 'I-PERSON+O': 25, 'O+B-LOCATION': 26, 
+                            'I-ORGANIZATION+I-ORGANIZATION': 21, 'I-ORGANIZATION+O': 22, 'I-PERSON+I-LOCATION': 23, 'I-PERSON+I-ORGANIZATION': 24, 'I-PERSON+O': 25, 'O+B-LOCATION': 26,
                             'O+B-MISCELLANEOUS': 27, 'O+B-ORGANIZATION': 28, 'O+I-LOCATION': 29, 'O+I-MISCELLANEOUS': 30, 'O+I-ORGANIZATION': 31, 'O+O': 32, '-PAD-+-PAD-': 0}
         else:
             self.tag2int = tag2int
         self.int2tag = {v: k for k, v in self.tag2int.items()}
-        if(model_path is None): 
+        if(model_path is None):
             path_root = os.path.join(os.path.expanduser('~'),".cache/torch/transformers")
             if(os.path.exists(os.path.join(path_root,"VnBertNer"))):
                 model_path = os.path.join(path_root,"VnBertNer")
@@ -48,7 +50,7 @@ class BertVnNer:
                 if(not os.path.exists(path_root)):
                     os.makedirs(path_root)
                 logger.info("Downloading.... model from https://nhanv.s3-ap-southeast-1.amazonaws.com/vinlp_model/VnBertNer.zip")
-                urllib.request.urlretrieve('https://nhanv.s3-ap-southeast-1.amazonaws.com/vinlp_model/VnBertNer.zip', os.path.join(path_root,'VnBertNer.zip'))
+                urllib.request.urlretrieve(url_download_model, os.path.join(path_root,'VnBertNer.zip'))
                 logger.info("Model is saved in {}".format(path_root))
                 with zipfile.ZipFile(os.path.join(path_root,'VnBertNer.zip'), 'r') as zip_ref:
                     zip_ref.extractall(path_root)
@@ -107,11 +109,11 @@ class BertVnNer:
         for step, batch in enumerate(tqdm(dataLoader, desc="Predict")):
             batch = tuple(t.to(device) for t in batch)
             b_input_ids, b_input_mask = batch
-            with torch.no_grad():        
-                outputs =  self.bertPoSTagger(b_input_ids, 
-                                token_type_ids=None, 
+            with torch.no_grad():
+                outputs =  self.bertPoSTagger(b_input_ids,
+                                token_type_ids=None,
                                 attention_mask=b_input_mask)
-                    
+
             predictions = outputs[0]
             max_preds = predictions.argmax(dim = 2, keepdim = True)
             lb = max_preds.cpu().detach().numpy().tolist()
@@ -147,7 +149,7 @@ class BertVnNer:
         train_dataloader = self.covert_text(texts,batch_size)
         test_pred = self.predict(train_dataloader)
         return test_pred
-        
+
     def annotate(self,texts,batch_size=8):
         try:
             return self._annotate(texts,batch_size)
