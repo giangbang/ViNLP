@@ -1,7 +1,7 @@
 import torch
 from setuptools import find_packages, setup
 
-requirements = ["transformers>=4.26.1", "nltk==3.7", "torch>=2.0.0"]
+requirements = ["transformers>=4.26.1", "nltk==3.7", "torch>=1.13.0"]
 
 setup(
     name="ViNLP",
